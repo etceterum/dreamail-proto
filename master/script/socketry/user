@@ -1,0 +1,140 @@
+#!/usr/bin/env ruby
+require File.expand_path('../../../config/environment',  __FILE__)
+
+def error(message)
+  $stderr.puts "Error: #{message}"
+  exit 1
+end
+
+class Dispatcher
+  
+  def self.dispatch(command, args)
+    signature = "command_#{command}"
+    d = Dispatcher.new
+    if d.respond_to?(signature)
+      d.send(signature, args)
+    else
+      d.usage
+    end
+  end
+  
+  def command_create(args)
+    login = args.shift
+    password = args.shift
+    create_error unless login && password
+    user = User.find_by_login(login)
+    create_error("User \"#{login}\" already exists") if user
+    user = User.new(:login => login, :password => password)
+    begin
+      user.save!
+    rescue Object => e
+      create_error(e)
+    end
+    puts "Created user \"#{login}\""
+  end
+  
+  def create_error(message = nil)
+    error(:create, '<login> <password>', message)
+  end
+  
+  def command_connect(args)
+    login = args.shift
+    connect_error("No login specified") unless login
+    other_login = args.shift
+    connect_error("No other user login specified") unless other_login
+    user = User.find_by_login(login)
+    create_error("Invalid login \"#{login}\"") unless user
+    if other_login == 'all'
+      other_users = User.find(:all, { :conditions => ['users.login <> ?', login] })
+      for other_user in other_users
+        if user.connected_with?(other_user)
+          puts "User \"#{login}\" is already connected with user \"#{other_user.login}\", skipping"
+          next
+        end
+        begin
+          user.connect_with!(other_user)
+          puts "Connected user \"#{login}\" with user \"#{other_user.login}\""
+        rescue Object => e
+          puts "Failed to connect user \"#{login}\" with user \"#{other_user.login}\": #{e}"
+        end
+      end
+    else
+      other_user = User.find_by_login(other_login)
+      connect_error("Invalid other user login \"#{other_login}\"") unless other_user
+      connect_error("Cannot connect to oneself. Or can?..") if user == other_user
+      connect_error("User \"#{login}\" is already connected with user \"#{other_login}\"") if user.connected_with?(other_user)
+      begin
+        user.connect_with!(other_user)
+      rescue Object => e
+        connect_error(e)
+      end
+      puts "Connected user \"#{login}\" with user \"#{other_login}\""
+    end
+  end
+  
+  def connect_error(message = nil)
+    error(:connect, '<login> <other-user-login>|all', message)
+  end
+  
+  def command_destroy(args)
+    login = args.shift
+    destroy_error("No login specified") unless login
+    if login == 'all'
+      logins = User.all.collect(&:login)
+      if logins.empty?
+        puts "No users exist"
+      else
+        begin
+          User.destroy_all
+        rescue Object => e
+          destroy_error("Failed to destroy all users: #{e}")
+        end
+        puts "Destroyed users:"
+        for login in logins
+          puts "  #{login}"
+        end
+      end
+    else
+      user = User.find_by_login(login)
+      destroy_error("Invalid login \"#{login}\"") unless user
+      begin
+        user.destroy
+      rescue Object => e
+        destroy_error("Failed to destroy user \"#{login}\": #{e}")
+      end
+      puts "Destroyed user \"#{login}\""
+    end
+  end
+  
+  def destroy_error(message = nil)
+    error(:destroy, '<login>|all', message)
+  end
+  
+  def command_list(args)
+    logins = User.all.collect(&:login)
+    if logins.empty?
+      puts "No users"
+    else
+      puts "Users:"
+      for login in logins
+        puts "  #{login}"
+      end
+    end
+  end
+  
+  def error(command, params, message)
+    $stderr.puts "#{command.to_s.camelize} Error: #{message}" if message
+    $stderr.puts "Usage: #{$0} #{command} #{params}"
+    exit 1
+  end
+  
+  def usage
+    commands = public_methods(false).find_all { |m| m =~ /^command_/ }.collect { |m| m.to_s.sub(/^command_/, '')}
+    $stderr.puts "Usage: #{$0} <#{commands.join('|')}> [...command-specific-parameters...]"
+    exit 1
+  end
+  
+end
+
+command = ARGV.shift
+Dispatcher.dispatch(command, ARGV)

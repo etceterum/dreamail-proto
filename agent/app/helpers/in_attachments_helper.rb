@@ -1,0 +1,2 @@
+module InAttachmentsHelper
+end

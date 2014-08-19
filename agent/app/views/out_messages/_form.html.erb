@@ -1,0 +1,433 @@
+<% content_toolbar :send_message, :save_message %>
+<% no_nav_toolbar %>
+<% no_global_title %>
+<% stylesheet 'message-editor' %>
+
+<% form_for @out_message, :url => url, :html => { :id => 'edit-message', :method => method } do |f| %>
+  <input type='hidden' name='send_message' id='send-message'></input>
+
+  <div class='trash'></div>
+
+  <table id='message-editor'>
+    
+    <!-- Page title -->
+    <tr>
+      <td>
+        <h1><%= yield(:title) %></h1>
+      </td>
+    </tr>
+    
+    <!-- Header: To and Subject-->
+    <tr>
+      <td>
+        <table id='message-header'>
+          
+          <!-- To -->
+          <tr id='message-to-wrapper'>
+            <th rowspan='2'>
+              <%= label :out_message, :to, "To:" %>
+            </th>
+            <td>
+              <input id='message-contact' type='text'/>
+            </td>
+          </tr>
+          <tr>
+            <td>
+<div id='message-contacts'><%- for recipient in @out_message.recipients -%>
+<%- contact = recipient.contact -%>
+<%= content_tag(:span, contact.login, :id => "message-contact-badge-#{contact.id}", :class => 'message-contact-badge', 'recipient-id' => recipient.id)  -%>
+<%- end -%></div>
+            </td>
+          </tr>
+          
+          <!-- Subject -->
+          <tr id='message-subject-wrapper'>
+            <th>
+              <%= label :out_message, :subject, "Subject:" %>
+            </th>
+            <td>
+              <%= text_field :out_message, :subject %>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+    
+    <!-- Content and Attachments -->
+    <tr>
+      <td class='full-width full-height'>
+       
+        <div class='full-width full-height table' id='mytest'>
+          
+          <!-- Content -->
+          <div class='tr'>
+            <div class='td'>
+              <%= text_area :out_message, :content, :id => 'message-content', :cols => nil %>
+            </div>
+          </div>
+
+          <!-- Attachments -->
+          <div class='tr'>
+            <div class='full-width full-height td'>
+
+              <table class='full-width full-height'>
+                <tr>
+                  <td>
+                    <h2>File System</h2>
+                  </td>
+                  <td style='border-left: 1px solid #333'>
+                    <h2 style='position: relative'>
+                      Attached Items - <span id='message-attachments-size'></span>
+                      <a id='remove-all-message-attachments' title='Remove All Attachments'>Remove All</a>
+                    </h2>
+                  </td>
+                </tr>
+                <tr>
+                  <td id='message-file-browser-wrapper'>
+                    <div class='full-width full-height scrollable'>
+                      <div id='message-file-browser'></div>
+                    </div>
+                  </td>
+                  <td id='message-attachments-wrapper'>
+                    <div class='full-width full-height scrollable'>
+                      <table id='message-attachments'>
+                      <%- for attachment in @out_message.attachments -%>
+                      <%- size_in_bytes = File.size(attachment.path) rescue -1 -%>
+                      <tr id='message-attachment-<%= attachment.id %>' class='message-attachment' bytes='<%= size_in_bytes %>' path='<%=h attachment.path %>' pref='<%=h attachment.local_path_prefix %>' suff='<%=h attachment.relative_path %>'></tr>
+                      <%- end -%>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+            </div>
+          </div>
+          
+        </div>
+        
+      </td>
+    </tr>
+    
+  </table>
+
+<% end %>
+
+<script language='javascript'>
+
+var contacts = [
+<%- Contact.all.each do |contact| -%>
+  { id: <%= contact.id %>, label: '<%= escape_javascript contact.login %>' },
+<%- end -%>
+];
+
+function populateContactBadge(badge) {
+  var badgeID = badge.attr('id')
+  var contactID = badgeID.substr(22);
+  var label = badge.html();
+
+  var remover = $('<a>').addClass('remove').attr({ href: 'javascript:', title: 'Remove ' + label }).text('x').appendTo(badge);
+  var recipientID = badge.attr('recipient-id');
+  remover.click(function() {
+    badge.fadeOut('slow', function() {
+      // if the badge has a recipient-id attribute, we don't want to physically delete it - just hide and mark as deleted
+      if (recipientID) {
+        var deletedFieldID = 'message-contact-deleted-' + contactID;
+        var deletedField = $('<input>').attr({ type: 'hidden', name: 'out_message[recipients_attributes][][_destroy]', id: deletedFieldID }).val('1').appendTo(badge);
+        badge.hide();
+        // and put under trash element for now
+        $('#edit-message .trash').append(badge);
+      } else {
+        // remove recipient badge + remove recipient from form
+        badge.remove();
+      }
+    })
+    $('#message-contact').focus();
+  });
+  
+  var contactFieldID = 'message-contact-' + contactID;
+  var contactField = $('<input>').attr({ type: 'hidden', name: 'out_message[recipients_attributes][][contact_id]', id: contactFieldID }).val(contactID).appendTo(badge);
+  
+  if (recipientID) {
+    var recipientField = $('<input>').attr({ type: 'hidden', name: 'out_message[recipients_attributes][][id]' }).val(recipientID).appendTo(badge);
+  }
+}
+
+function removeAttachment(badge) {
+  var badgeID = badge.attr('id');
+  if (badgeID) {
+    // existing attachment (saved in DB) - we don't want to just remove the badge from the DOM, 
+    // we want to mark it as deleted and put away for now
+    var ctrlCell = $('td.message-attachment-ctrl', badge);
+    var deletedField = $('<input>').addClass('deleted-message-attachment').attr({ type: 'hidden', name: 'out_message[attachments_attributes][][_destroy]' }).val('1').appendTo(ctrlCell);
+    badge.appendTo($('#edit-message .trash'));
+  } else {
+    badge.remove();
+  }
+}
+
+function populateAttachmentBadge(badge) {
+  var sizeInBytes = parseInt(badge.attr('bytes'));
+  var prefix = badge.attr('pref');
+  var suffix = badge.attr('suff');
+  var path = badge.attr('path');
+  
+  var ctrlCell = $('<td>').addClass('message-attachment-ctrl').appendTo(badge);
+  var deleteCtrl = $('<a>').text('x').attr('title', 'Remove attachment from the list').appendTo(ctrlCell);
+  deleteCtrl.click(function() {
+    removeAttachment(badge);
+    updateAttachments();
+  });
+  var sizeCell = $('<td>').addClass('message-attachment-size').text(numberToHumanSize(sizeInBytes)).attr('title', sizeInBytes + ' Bytes').appendTo(badge);
+  var pathCell = $('<td>').addClass('message-attachment-path').text(suffix).attr('title', path).appendTo(badge);
+  // hidden form fields
+  var relPathField = $('<input>').attr({ type: 'hidden', name: 'out_message[attachments_attributes][][relative_path]' }).val(suffix).appendTo(ctrlCell);
+  var absPathField = $('<input>').attr({ type: 'hidden', name: 'out_message[attachments_attributes][][local_path_prefix]' }).val(prefix).appendTo(ctrlCell);
+  
+  var badgeID = badge.attr('id');
+  if (badgeID) {
+    var attachmentID = badgeID.substr(19);
+    var idField = $('<input>').attr({ type: 'hidden', name: 'out_message[attachments_attributes][][id]' }).val(attachmentID).appendTo(ctrlCell);
+  }
+}
+
+function updateAttachments() {
+  var totalSize = 0;
+  $('#message-editor #message-attachments tr.message-attachment').each(function(index) {
+    var size = parseInt($(this).attr('bytes'));
+    totalSize += size;
+  });
+  var totalBadge = $('#message-attachments-size');
+  totalBadge.attr('title', 'Total Attachments Size: ' + totalSize + ' Bytes').text(numberToHumanSize(totalSize));
+  
+  // sort by suffix
+  var container = $('#message-attachments');
+  var rows = $('tr.message-attachment', container).get();
+  rows.sort(function(a, b) {
+     var compA = $(a).attr('suff').toUpperCase();
+     var compB = $(b).attr('suff').toUpperCase();
+     return (compA < compB) ? -1 : (compA > compB) ? 1 : 0;
+  })
+  $.each(rows, function(idx, itm) { container.append(itm); });
+}
+
+$(document).ready(function() {
+  // populate contact badges
+  $('#message-contacts > .message-contact-badge').each(function(index) {
+    populateContactBadge($(this));
+  });
+  
+  // autofocus on the 1st form field
+  $('#message-contact').focus();
+  
+  // setup autocomplete for the "to" field
+  $('#message-contact').autocomplete({
+    source: contacts,
+    minLength: 0,
+    close: function() {
+      $('#message-contact').val('');
+    },
+    select: function(e, ui) {
+      var id = ui.item.id
+      var badgeID = 'message-contact-badge-' + id;
+      //var fieldID = 'message-contact-' + id;
+      var badge = $('#' + badgeID);
+      if (0 != badge.length) {
+        // badge exists - but may be marked as deleted, so we're gonna check
+        var deletedField = $('#message-contact-deleted-' + id, badge);
+        if (0 == deletedField.length) {
+          // if badge is not marked as deleted, highlight it to indicate to the user that the recipient is already on the list
+          badge.effect('highlight', { color: 'green' }, 500);
+        } else {
+          // badge exists but marked as deleted, "un-delete" it, make visible and move to the end of the list
+          deletedField.remove();
+          $('#message-contacts').append(badge);
+          badge.show();
+        }
+      } else {
+        // add new recipient badge + add recipient to form
+        var label = ui.item.value;
+        badge = $('<span>').text(label).attr('id', badgeID).attr('class', 'message-contact-badge');
+        // var a = $('<a>').addClass('remove').attr({ href: 'javascript:', title: 'Remove ' + label }).text('x').appendTo(badge);
+        // a.click(function() {
+        //   badge.fadeOut('slow', function() {
+        //     // remove recipient badge + remove recipient from form
+        //     badge.remove();
+        //   })
+        //   $('#message-contact').focus();
+        // });
+        $('#message-contacts').append(badge);
+        populateContactBadge(badge);
+        // var field = $('<input>').attr({ type: 'hidden', name: 'out_message[recipients_attributes][][contact_id]', id: fieldID }).val(id).appendTo(badge);
+      }
+    }
+  });
+  
+  // setup rich text editor for the "content" field
+  messageEditor = $('#message-content').cleditor({ 
+    width: '100%', height: '150px'
+  });
+  
+  // setup file browser for attachments
+  $('#message-file-browser').fileTree({ 
+      root: '.',
+      script: '/filesystem/ls'
+    },
+    function(file) {
+      // no-op: this function is called when a file is clicked which we don't care about
+    }
+  );
+  
+  // setup vertical splitter between file browser and attachments
+  // $('#message-attachments-wrapper').splitter();
+  
+  // setup toolbar buttons
+  $('#button-message-send').click(function() {
+    // can only send if there is at least one recipient and subject is not blank
+    var errors = [];
+    
+    var contacts = $('#message-contacts .message-contact-badge');
+    if (0 == contacts.length) {
+      errors.push('no recipients');
+      $('#message-to-wrapper').effect('highlight', { color: 'red' }, 500);
+    }
+    
+    var subject = $.trim($('#out_message_subject').val());
+    if (subject == '') {
+      errors.push('blank subject');
+      $('#message-subject-wrapper').effect('highlight', { color: 'red' }, 500);
+    }
+    
+    var attachments = $('#message-attachments tr.message-attachment');
+    if (0 == attachments.length) {
+      errors.push('no attachments');
+      $('#message-attachments-wrapper').effect('highlight', { color: 'red' }, 500);
+    }
+    
+    if (0 == errors.length) {
+      $('#send-message').val('1');
+      $('#edit-message').submit();
+    } else {
+      $('#message-contact').focus();
+    }
+    
+    return false;
+  });
+  
+  $('#button-message-save').click(function() {
+    $('#edit-message').submit();
+    return false;
+  });
+  
+  // setup drag-n-drop from file browser to attachment list
+  $('#message-attachments-wrapper').droppable({
+    activeClass: 'active',
+    drop: function(event, ui) {
+      var element = ui.draggable;
+      var link = $('a', element);
+      var path = link.attr('rel');
+      $.getJSON('/filesystem/tree', { root: path }, function(files) {
+        $.each(files, function(index, file) {
+          
+          // we will only add the new attachment to the list if there is no attachment with the same absolute path
+          var path = file.path;
+          var existingBadge = $('tr.message-attachment[path=' + path + ']');
+          if (existingBadge.length) {
+            // the existing badge may be in trash - in that case resurrect it
+            var deletedField = $('input.deleted-message-attachment', existingBadge);
+            if (deletedField.length) {
+              // was in trash: unmark as deleted and bring back to under attachments
+              deletedField.remove();
+              existingBadge.appendTo($('#message-attachments'));
+            } else {
+              $('td', existingBadge).effect('highlight', { color: 'green' }, 500);
+            }
+            return;
+          }
+          
+          var badge = $('<tr>').addClass('message-attachment').appendTo($('#message-attachments'));
+          badge.attr({ path: file.path, pref: file.pref, suff: file.suff, bytes: file.size });
+          populateAttachmentBadge(badge);
+          
+          // var ctrlCell = $('<td>').appendTo(row);
+          // var deleteCtrl = $('<a>').text('x').attr('title', 'Remove attachment from the list').appendTo(ctrlCell);
+          // deleteCtrl.click(function() {
+          //   return false;
+          // });
+          // var sizeCell = $('<td>').text(numberToHumanSize(file.size)).attr('title', file.size + ' Bytes').appendTo(row);
+          // var pathCell = $('<td>').text(file.paths.rel).attr('title', file.paths.abs).appendTo(row);
+          // // hidden form fields
+          // var relPathField = $('<input>').attr({ type: 'hidden', name: 'out_message[attachments_attributes][][relative_path]' }).val(file.paths.rel).appendTo(ctrlCell);
+          // var absPathField = $('<input>').attr({ type: 'hidden', name: 'out_message[attachments_attributes][][local_path_prefix]' }).val(file.paths.prefix).appendTo(ctrlCell);
+        });
+        
+        updateAttachments();
+      });
+    }
+  });
+  
+  // freeze dimensions of file browser and attachments
+  freezeDimensions($('#message-file-browser').parent());
+  freezeDimensions($('#message-attachments').parent());
+  
+  // populate attachment badges for existing attachments
+  $('#message-editor #message-attachments tr.message-attachment').each(function(index) {
+    populateAttachmentBadge($(this));
+  });
+  updateAttachments();
+  
+  // setup callback to delete all attachments
+  $('#remove-all-message-attachments').click(function() {
+    $('#message-editor #message-attachments tr.message-attachment').each(function(index) {
+      removeAttachment($(this));
+    });
+    updateAttachments();
+  });
+  
+  /*
+  // set up autocomplete for the "to" field
+  $('#message-contact').autocomplete({
+    minChars: 0,
+    mustMatch: true,
+    autoFill: true,
+    selectFirst: true,
+
+    // define callback to format results
+    source: function(req, add) {
+      // pass request to server
+      $.getJSON("/contacts/autocomplete", req, function(data) {
+        // create array for response objects  
+        var suggestions = [];
+        // process response  
+        $.each(data, function(i, val) {
+          suggestions.push(val.name);  
+        });
+        // pass array to callback
+        add(suggestions);
+      });
+    },
+    
+    // define select handler
+    select: function(e, ui) {
+      // create formatted contact
+      var contact = ui.item.value;
+      var span = $('<span>').text(contact);
+      var a = $('<a>').addClass('remove').attr({ href: 'javascript:', title: 'Remove ' + contact }).text('x').appendTo(span);
+      $('#message-contacts').append(span);
+      setTimeout(function() {
+        $('#message-contact').val('');
+      }, 1);
+    },
+    
+    // define select handler
+    change: function() {
+      // alert($('#message-contact').val());
+      // $('#message-contact').val('');
+    }
+    
+  });
+  */
+  
+});
+</script>

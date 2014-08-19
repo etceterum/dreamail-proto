@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  node_id: 1
+  in_message_id: 1
+  data: 
+
+two:
+  node_id: 1
+  in_message_id: 1
+  data: 

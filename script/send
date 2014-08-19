@@ -1,0 +1,84 @@
+#!/usr/bin/env ruby
+
+##########
+
+$LOAD_PATH << './lib'
+require 'socketry/script'
+require 'socketry/test'
+
+##########
+
+class Sender
+  include Socketry::Script
+  include Socketry::Test
+  
+  # path to agent instances directory relative to .
+  AGENT_INSTANCES_DIR = File.join('.', 'agent', 'instances')
+  
+  # path to message templates directory relative to an agent instance directory
+  TEMPLATE_DIR = File.join('..', '..', 'test', 'socketry', 'messages')
+  
+  def run(argv)
+    sender = argv.shift
+    template = argv.shift
+    recipients = argv
+    
+    error("Sender not specified") unless sender
+    error("Invalid sender. Valid senders are: #{USERS.join(', ')}") unless USERS.find(sender)
+    
+    instance_dir = File.join(AGENT_INSTANCES_DIR, sender)
+    error("Agent instance \"#{instance_dir}\" does not exist") unless File.directory?(instance_dir)
+    
+    template_dir = File.join(instance_dir, TEMPLATE_DIR, template)
+    error("Message template \"#{template_dir}\" does not exist") unless File.directory?(template_dir)
+    
+    if recipients.size == 1 && recipients[0] == 'all'
+      recipients = nil
+    else
+      error("No recipients specified") if recipients.empty?
+      for recipient in recipients
+        error("Invalid recipient \"#{recipient}\"") unless USERS.find(recipient)
+        error("Recipient cannot be the same as sender") if recipient == sender
+      end
+    end
+    
+    send_message(sender, template, recipients)
+    
+    puts "Message imported and marked to be sent"
+  end
+  
+  def send_message(user, template, recipients = nil)
+    user = user.to_s
+    unless recipients
+      recipients = USERS.dup
+      recipients.delete(user)
+    end
+    recipients = recipients.collect { |r| "#{login(r)}" }.join(' ')
+    
+    template_dir = File.join(TEMPLATE_DIR, template)
+    agent_instance_script "Importing message \"#{template}\"", "outgoing import #{template_dir} #{recipients}", user
+    agent_instance_script "Marking message \"#{template}\" for sending", "outgoing push all", user
+  end
+
+  private
+  
+  def delimiter
+    puts
+    puts("-" * 100)
+  end
+  
+  def login(user)
+    "#{user}@#{DOMAIN}"
+  end
+  
+  def error(message)
+    $stderr.puts "Error: $message" if message
+    $stderr.puts "Usage: #{$0} <sender> <recipient1 [...recipientN]>|all"
+    exit 1
+  end
+  
+end
+
+##########
+
+Sender.new.run(ARGV)

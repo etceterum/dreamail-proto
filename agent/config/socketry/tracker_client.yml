@@ -1,0 +1,5 @@
+---
+:host: service.localhost
+:port: 2500
+:security:
+  :public_key: public_key.pem

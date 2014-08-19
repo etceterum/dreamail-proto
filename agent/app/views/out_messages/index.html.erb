@@ -1,0 +1,31 @@
+<% title "Out Messages" %>
+
+<table>
+  <tr>
+    <th>Uid</th>
+    <th>Subject</th>
+    <th>Content</th>
+    <th>Status Code</th>
+    <th>Hex Cipher Key</th>
+    <th>Hex Cipher Iv</th>
+    <th>Body Asset</th>
+    <th>Head Asset</th>
+  </tr>
+  <% for out_message in @out_messages %>
+    <tr>
+      <td><%=h out_message.uid %></td>
+      <td><%=h out_message.subject %></td>
+      <td><%=h out_message.content %></td>
+      <td><%=h out_message.status_code %></td>
+      <td><%=h out_message.hex_cipher_key %></td>
+      <td><%=h out_message.hex_cipher_iv %></td>
+      <td><%=h out_message.body_asset_id %></td>
+      <td><%=h out_message.head_asset_id %></td>
+      <td><%= link_to "Show", out_message %></td>
+      <td><%= link_to "Edit", edit_out_message_path(out_message) %></td>
+      <td><%= link_to "Destroy", out_message, :confirm => 'Are you sure?', :method => :delete %></td>
+    </tr>
+  <% end %>
+</table>
+
+<p><%= link_to "New Out Message", new_out_message_path %></p>

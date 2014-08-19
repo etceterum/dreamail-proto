@@ -1,0 +1,95 @@
+<% title 'Contacts' %>
+<% content_toolbar :new_contact %>
+<% no_global_title %>
+
+<div class='wrapper'>
+  <div class='tr'>
+    <div class='td'><h2><%= yield(:title) %></h2></div>
+    <div class='td' style='border-left: 1px solid #ccc'><h2>File Browser</h2></div>
+  </div>
+  <div class='tr' style='height: 100%'>
+    <div class='td'>
+      <ul class='contacts'>
+      <% for contact in @contacts %>
+      <li class='contact' id='contact-<%= contact.id %>'>
+        <a class='delete' title='Remove Contact' href='javascript:false'>x</a>
+        <div class='wrapper'>
+          <div>
+            <img src='/images/icons/human.png' title='A real user picture will appear here if setup in contact profile'/>
+          </div>
+          <div class='info'>
+            <span class='name'><%=h contact.name %></span><br/>
+            <span class='login'><%=h contact.login %></span><br/>
+            <span>(Since <%= contact.created_at.strftime('%Y-%m-%d') %>)</span>
+          </div>
+        </div>
+        <form id='contact-form-<%= contact.id %>' action='/draft/new' method='post'>
+          <input type='hidden' name='message[recipients_attributes][][contact_id]' value='<%= contact.id %>'/>
+          <input type='hidden' name='message[subject]' value='Some files for you'/>
+          <input type='hidden' name='message[content]' value='Hey <%= contact.name %>, I thought you might find this interesting.'/>
+        </form>
+      </li>
+      <% end %>
+      </ul>
+    </div>
+
+    <div id='file-browser-wrapper' class='td' style='width: 40%; border-left: 1px solid #ccc; padding: 5px;'>
+      <div class='full-width full-height'>
+        <div id='file-browser' class='full-width full-height' style='overflow: auto'></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script language='javascript'>
+$(document).ready(function() {
+
+  $('ul.contacts a.delete').click(function() {
+    alert('This function is not implemented yet');
+    return false;
+  });
+  
+  $('ul.contacts li.contact').droppable({
+    activeClass: 'active',
+    drop: function(event, ui) {
+      var contactID = $(this).attr('id').substr(8);
+      var form = $('#contact-form-' + contactID);
+      
+      // resolve path names
+      var element = ui.draggable;
+      var link = $('a', element);
+      var path = link.attr('rel');
+      $.getJSON('/filesystem/tree', { root: path }, function(files) {
+        $.each(files, function(index, file) {
+          var pref = file.pref;
+          $('<input>').attr({ type: 'hidden', name: 'message[attachments_attributes][][local_path_prefix]', value: pref }).appendTo(form);
+          var suff = file.suff;
+          $('<input>').attr({ type: 'hidden', name: 'message[attachments_attributes][][relative_path]', value: suff }).appendTo(form);
+        });
+        
+        form.submit();
+      });
+    }
+  });
+  
+  freezeDimensions($('#file-browser'));
+  // $('#file-browser').css({ 
+  //   width: ($('#file-browser-subwrapper').width() - 40) + 'px',
+  //   height: ($('#file-browser-subwrapper').height() - 200) + 'px' 
+  // });
+  // var parent = $('#content');
+  // $('#file-browser-wrapper').css({ height: (parent.height() - 50) + 'px' });
+  
+  // setup file browser for attachments
+  $('#file-browser').fileTree({ 
+      root: '.',
+      script: '/filesystem/ls'
+    },
+    function(file) {
+      // no-op: this function is called when a file is clicked which we don't care about
+    }
+  );
+  
+});
+</script>

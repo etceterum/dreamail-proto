@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+require File.expand_path(File.join(__FILE__, '..', '..', '..', 'config', 'environment'))
+
+require 'socketry/logger'
+
+logger = Socketry.logger
+logger.level = Logger::INFO
+
+logger.info "Destroying all data in database"
+OutMessage.destroy_all
+InMessage.destroy_all
+Asset.destroy_all
+Contact.destroy_all
+
+logger.info "Removing asset data from #{Socketry::Config::PRIVATE_LOCAL_ASSETS_ROOT}"
+FileUtils.rm(Dir.glob(File.join(Socketry::Config::PRIVATE_LOCAL_ASSETS_ROOT, '*.body')))
+FileUtils.rm(Dir.glob(File.join(Socketry::Config::PRIVATE_LOCAL_ASSETS_ROOT, '*.head')))
+
+logger.info "Nullifying last ping time"
+Socketry::Config.ping.timestamp = nil
+Socketry::Config.ping.save!
+
+logger.info "Nullifying node UID - use register script to create a new one"
+Socketry::Config.node.uid = nil
+Socketry::Config.node.save!
+
+logger.info "Done"

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+PORT=2500
+
+pushd .
+echo "Running master at port $PORT:"
+cd ./master && ./script/server -p $PORT
+popd

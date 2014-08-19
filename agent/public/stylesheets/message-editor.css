@@ -1,0 +1,202 @@
+#edit-message {
+	width: 100%;
+	height: 100%;
+}
+
+#message-editor {
+	width: 100%;
+	height: 100%; 
+}
+
+#message-editor #message-header {
+	height: 50px;
+	border-bottom: 1px solid black;
+	background: #eee;
+}
+
+#message-editor #message-header th {
+	font-family: Arial, Helvetica, sans-serif;
+	padding: 4px 6px 2px 30px;
+	font-size: 11px;
+	font-weight: bold;
+	text-align: right;
+	vertical-align: baseline;
+}
+
+#message-editor #message-header td {
+	width: 100%;
+	padding: 1px 10px 2px 2px;
+}
+
+#message-editor #message-header td input[type='text'] {
+	display: block;
+	width: 100%;
+	border: medium ridge #ccc;
+	padding: 3px 0;
+}
+
+#message-editor #message-header td input[type='text']:focus {
+	background: #ffe;
+	outline: none;
+}
+
+#message-editor #message-header td #message-contacts {
+	/*
+	background-image: url(/images/ui/glossymetal.jpg);
+	background-repeat: repeat;	
+	*/
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#ccc), to(#999));
+	background-image: -moz-linear-gradient(top, #ccc, #999);
+	
+	
+	width: 100%;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	border: medium ridge #ccc;
+}
+
+#message-editor #message-header td #message-contacts:empty {
+	border: none;
+}
+
+#message-editor #message-header #message-contacts span {
+	display: inline-block;
+	position: relative;
+	background: #eee;
+	margin: 3px 0px 3px 5px;
+	padding: 3px 20px 3px 10px;
+	-moz-border-radius: 7px;
+	border-radius: 7px;
+	border: 1px solid #333;
+	color: #333;
+	cursor: default;
+}
+
+#message-editor #message-header #message-contacts span:hover {
+	-webkit-transform: scale(1.05);
+	-moz-transform: scale(1.05);
+}
+
+#message-editor #message-header #message-contacts span a {
+	position: absolute;
+	right: 8px;
+	top: 2px;
+	font-weight: bold;
+	text-decoration: none;
+	visibility: hidden;
+	color: #ccc;
+}
+
+#message-editor #message-header #message-contacts span:hover a {
+	visibility: visible;
+}
+
+#message-editor #message-header #message-contacts span a:hover {
+	color: black;
+	-webkit-transform: scale(1.5);
+	-moz-transform: scale(1.5);
+}
+
+#message-editor #message-file-browser-wrapper, #message-editor #message-attachments-wrapper {
+	width: 50%;
+	height: 100%;
+	overflow: auto;
+}
+
+#message-editor #message-attachments-wrapper {
+	border-left: 1px solid #333;
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#ccc), to(#999));
+	background-image: -moz-linear-gradient(top, #ccc, #999);
+}
+
+#message-editor #message-attachments-wrapper.active {
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#fcc), to(#f99));
+	background-image: -moz-linear-gradient(top, #fcc, #f99);
+}
+
+#message-editor #message-attachments-wrapper.active  td {
+	opacity: 0.3;
+	/*-webkit-mask-box-image: url(/images/ui/mask.png) 75 stretch;*/
+}
+
+#message-editor #message-attachments {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	width: 100%;
+}
+
+#message-editor #message-attachments tr:nth-child(2n+1) td {
+	background: #efe;
+}
+
+#message-editor #message-attachments tr:last-child td {
+	border-bottom: 1px solid #666;
+}
+
+#message-editor #message-attachments td {
+	white-space: nowrap;
+	padding: 2px 10px;
+	background: #fefefe;
+	vertical-align: middle;
+}
+
+#message-editor #message-attachments td:last-child {
+	width: 100%;
+}
+
+#message-editor #message-attachments td:not(:first-child) {
+	border-left: 1px solid #666;
+}
+
+#message-editor #message-attachments .message-attachment-ctrl a {
+	display: inline-block;
+	background: #ffe;
+	padding: 1px 5px;
+	margin: 1px;
+	border: 1px solid #ccc;
+	text-decoration: none;
+	border-radius: 1em;
+	-moz-border-radius: 1em;
+	cursor: pointer;
+	color: #ccc;
+	font-weight: bold;
+}
+
+#message-editor #message-attachments .message-attachment-ctrl a:hover {
+	-webkit-transform: scale(1.2);
+	-moz-transform: scale(1.2);
+	background: #ffe;
+	color: red;
+	border-color: red;
+}
+
+#message-editor #message-attachments .message-attachment-size {
+	cursor: default;
+}
+
+#message-editor h2 a#remove-all-message-attachments {
+	position: absolute;
+	right: 10px;
+	top: 3px;
+	background: #ffe;
+	padding: 1px 10px;
+	margin: 1px;
+	border: 1px solid #ccc;
+	text-decoration: none;
+	border-radius: 1em;
+	-moz-border-radius: 1em;
+	cursor: pointer;
+	color: #ccc;
+	font-weight: normal;
+}
+
+#message-editor h2 a#remove-all-message-attachments:hover {
+	-webkit-transform: scale(1.2);
+	-moz-transform: scale(1.2);
+	color: red;
+	border-color: red;
+}
+
+#message-editor #message-attachments-size {
+	color: blue;
+}

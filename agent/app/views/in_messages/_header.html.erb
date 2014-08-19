@@ -1,0 +1,5 @@
+<tr class='<%= @message.read? ? 'read' : 'unread' %>' message=<%= @message.id %>>
+  <td class='when'><%=format_time @message.confirmed_at %></td>
+  <td class='from'><%=h @message.sender.login %></td>
+  <td class='subject' style='width: 100%'><%=h @message.subject %></td>
+</tr>

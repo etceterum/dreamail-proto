@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+require File.expand_path(File.join(__FILE__, '..', '..', '..', 'config', 'environment'))
+
+class Dispatcher
+  
+  def self.dispatch(command, args)
+    signature = "command_#{command}"
+    d = Dispatcher.new
+    if d.respond_to?(signature)
+      d.send(signature, args)
+    else
+      d.usage
+    end
+  end
+  
+  def command_list(args)
+    Contact.all.each do |contact|
+      print(contact.active? ? '+' : '-')
+      puts(" #{contact.login}")
+    end
+  end
+  
+  def command_create(args)
+    contact_login = args.shift
+    create_error('No contact login specified') unless contact_login
+    contact = Contact.find_by_login(contact_login)
+    create_error("Contact \"#{contact_login}\" already exists") if contact
+    begin
+      contact = Contact.new(:login => contact_login, :active => true)
+      contact.save!
+      puts "Created contact \"#{contact_login}\""
+    rescue Object => e
+      create_error("Failed to create contact \"#{contact_login}\": #{e}")
+    end
+  end
+  
+  def create_error(message)
+    error(:create, '<contact-login>', message)
+  end
+  
+  def error(command, params, message)
+    $stderr.puts "#{command.to_s.camelize} Error: #{message}" if message
+    $stderr.puts "Usage: #{$0} #{command} #{params}"
+    exit 1
+  end
+  
+  def usage
+    commands = public_methods(false).find_all { |m| m =~ /^command_/ }.collect { |m| m.to_s.sub(/^command_/, '')}
+    $stderr.puts "Usage: #{$0} <#{commands.join('|')}> [...command-specific-parameters...]"
+    exit 1
+  end
+  
+end
+
+command = ARGV.shift
+Dispatcher.dispatch(command, ARGV)

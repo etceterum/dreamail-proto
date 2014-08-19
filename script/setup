@@ -1,0 +1,79 @@
+#!/usr/bin/env ruby
+
+##########
+
+$LOAD_PATH << './lib'
+require 'socketry/script'
+require 'socketry/test'
+
+##########
+
+class Setup
+  include Socketry::Script
+  include Socketry::Test
+  
+  def initialize
+    @port = BASE_PORT
+  end
+
+  def run
+    for user in USERS
+      delimiter
+      initialize_user(user)
+    end
+    
+    delimiter
+    # send_message :alice,  :one
+    # send_message :steve,  :two
+    # send_message :evgeny, :one
+  end
+  
+  def send_message(user, template, recipients = nil)
+    user = user.to_s
+    unless recipients
+      recipients = USERS.dup
+      recipients.delete(user)
+    end
+    recipients = recipients.collect { |r| "#{login(r)}" }.join(' ')
+    agent_instance_script "Importing message \"#{template}\" for user \"#{user}\"", "outgoing import ../../test/socketry/messages/#{template} #{recipients}", user
+    agent_instance_script "Marking message \"#{template}\" for sending", "outgoing push all", user
+  end
+
+  private
+  
+  def delimiter
+    puts
+    puts("-" * 100)
+  end
+  
+  def initialize_user(user)
+    user = user.to_s
+    socketry_script "Creating user #{user}", "user create #{login(user)} #{password}", :master
+    socketry_script "Connecting user #{user}", "user connect #{login(user)} all", :master
+    script "Creating agent instance for user #{user}", "generate instance #{user} #{next_port} #{login(user)} #{password}", :agent
+    agent_instance_execute "Migrating agent instance database for user #{user}", "rake db:migrate", user
+    other_users = USERS.dup
+    other_users.delete(user)
+    for other_user in other_users
+      agent_instance_script "Adding #{other_user} as contact for #{user}", "contact create #{login(other_user)}", user
+    end
+  end
+  
+  def login(user)
+    "#{user}@#{DOMAIN}"
+  end
+  
+  def password
+    PASSWORD
+  end
+  
+  def next_port
+    @port += 1
+    @port
+  end
+  
+end
+
+##########
+
+Setup.new.run

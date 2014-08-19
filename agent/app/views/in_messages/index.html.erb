@@ -1,0 +1,199 @@
+<% title 'Inbox' %>
+
+<div class='wrapper'>
+
+  <!-- top -->
+  <div class='full-width table-row'>
+    <div class='full-width table-cell'>
+      
+      <table id='messages'>
+        <!-- <tbody>
+          <% for message in @messages %>
+            <%= render :partial => 'header', :locals => { :message => message } %>
+          <% end %>
+        </tbody> -->
+      </table>
+      
+    </div>
+  </div>
+
+  <!-- bottom -->
+  <div class='full-width table-row'>
+    <div id='message-container' class='full-width table-cell' style='height: 100%'>
+      <div id='message' class='empty'>&nbsp;</div>
+    </div>
+  </div>
+</div>
+
+<script language='javascript'>
+var selectedInMessageID = null;
+var messageList = null;
+
+$(document).ready(function() {
+  
+  // what to do when new in-messages are reported
+  updateInMessages = function(newLastInMessageID) {
+    // alert('here: ' + newLastInMessageID);
+    lastInMessageID = newLastInMessageID;
+    // messageList.flexReload();
+		$.ajax({
+		  url: '/message/incoming/list',
+		  dataType: 'json',
+		  success: function(data) { 
+        messageList.grid.addData(data);
+        
+        $.each(data.rows, function(index, row) {
+          var tr = $('#row' + row.id);
+          if (!row.read) {
+            tr.addClass('unread');
+          }
+          if (0 == index) {
+            // make the subject field 100%-wide
+            $(':last-child', tr).css('width', '100%');
+          }
+        });
+        
+        // $('#rowims1').addClass('unread');
+
+        // var rows = data.rows;
+        // $.each($('#messages tbody tr'), function(i, tr) {
+        //   var row = rows[i];
+        //   if (!row.read) {
+        //     tr.addClass('unread');
+        //   }
+        // });
+        
+        // $.each(data.rows, function(i, row_data) {
+        //   if (!row_data.read) {
+        //     var row = $('#rowims' + row_data.id);
+        //     row.addClass('unread');
+        //   }
+        // });
+		  }
+    });
+    
+    // what to do when attachment download progress is reported
+    updateTrackedInAttachment = function(attachment) {
+      attachmentID = attachment.id;
+      var progress = $('#attachment-progress-' + attachmentID);
+      if (null == progress) {
+        return;
+      }
+      if (attachment.done) {
+        // removeTrackedInAttachmentID(attachmentID);
+        var parent = progress.parent();
+        parent.load('/attachment/incoming/ready/' + attachmentID);
+      } else {
+        // alert(attachment.progress + "/" + attachment.total);
+        var percentage = progressToPercentage(attachment.progress, attachment.total);
+        //progress.html(percentage);
+        progress.progressBar(percentage);
+      }
+    }
+       
+    // $.each(messageIDs, function(index, messageID) {
+    //   // for each new message id, insert it into the list
+    //   $.get('/message/incoming/header/' + messageID, function(data) {
+    //     // $('#messages tbody').append(data);
+    //     messageList.grid.addData();
+    //   });
+    // });
+    // alert(messageList.grid.addData);
+    // messageList.grid.addData({
+    //   rows: [
+    //     { cell: ["today", "alex", "Hello"] }
+    //   ]
+    //   });
+  }
+  
+  // make message list look pretty
+  messageList = $.addFlex($("#messages"), { 
+    height: 150, 
+    singleSelect: true, 
+    striped: true,
+    // title: 'Inbox',
+    dataType: 'json',
+    // url: '/message/incoming/list',
+    colModel: [
+    { display: 'When', name: 'when', width: 100, sortable: true },
+    { display: 'From', name: 'from', width: 200, sortable: true },
+    { display: 'Subject', name: 'subject', width: 100, sortable: true },
+    ],
+    onSuccess: function() {
+      // handler for when the user selects/unselect a message in the list
+      $('#messages tbody tr').click(function() {
+        var fullMessageID = $(this).attr('id');
+        var messageID = fullMessageID.substr(6);
+
+        // find out if the row was selected or unselected
+        var selected = $(this).hasClass('trSelected');
+        
+        if (selectedInMessageID == fullMessageID) {
+          // for some reason, flexigrid (or not?) reports every click twice
+          return false;
+        }
+        
+        // reset attachment downloads being tracked
+        trackedInAttachmentIDs = [];
+
+        if (selected) {
+          $(this).addClass('read');
+          $(this).removeClass('unread');
+          selectedInMessageID = fullMessageID;
+          
+          $('#message-container').load('/message/incoming/embed/' + messageID, function() {
+            $("#attachments").flexigrid({
+              resizable: false,
+              title: 'Attachments'
+            });
+            
+            var contentElement = $('#message-content');
+            var contentParent = contentElement.parent();
+            var height = (contentParent.height() - 25) + 'px';
+            contentElement.css({ height: height });
+            
+            // make clicking to attachment download links trigger attachment download
+            $('a.download-attachment').each(function(index) {
+              $(this).click(function() {
+                var attachmentID = $(this).attr('id').substr(20);
+                var attachmentStatus = $("#download-attachment-" + attachmentID);
+                attachmentStatus.hide();
+                // $(this).parent().load('/attachment/incoming/download/' + attachmentID, { _method: 'PUT' });
+                $.ajax({
+                  url: '/attachment/incoming/download/' + attachmentID,
+                  data: { _method: 'PUT' },
+                  type: 'POST',
+                  success: function(response) {
+                    addTrackedInAttachmentID(attachmentID);
+                    attachmentStatus.replaceWith(response);
+                    $("#attachment-progress-" + attachmentID).progressBar();
+                  }
+                });
+                return false;
+              });
+            });
+            
+            // track download progress for each attachment being downloaded
+            $('.attachment-progress').each(function(index) {
+              attachmentID = $(this).attr('id').substr(20);
+              addTrackedInAttachmentID(attachmentID);
+              //$(this).progressBar();
+            });
+            
+          });
+        } else {
+          selectedInMessageID = null;
+          $('#message').replaceWith('<div id="message" class="empty">&nbsp;</div>');
+        }
+        return false;
+      });
+      
+      if (null != selectedInMessageID) {
+        $("#" + selectedInMessageID).click();
+      }
+    }
+  });
+  updateInMessages(0);
+    
+});
+</script> 

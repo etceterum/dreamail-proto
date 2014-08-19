@@ -1,0 +1,115 @@
+<% title 'Outbox' %>
+
+<div class='wrapper'>
+
+  <!-- top -->
+  <div class='full-width table-row'>
+    <div class='full-width table-cell'>
+      
+      <table id='messages'>
+      </table>
+      
+    </div>
+  </div>
+
+  <!-- bottom -->
+  <div class='full-width table-row'>
+    <div id='message-container' class='full-width table-cell' style='height: 100%'>
+      <div id='message' class='empty'>&nbsp;</div>
+    </div>
+  </div>
+</div>
+
+<script language='javascript'>
+var messageList = null;
+
+$(document).ready(function() {
+  var selectedMessageID = null;
+  var messageList = null;
+  
+  // what to do when unsent message count changes
+  updateUnsentMessages = function(messageCount) {
+    unsentMessageCount = messageCount;
+		$.ajax({
+		  url: '/outbox/list',
+		  dataType: 'json',
+		  success: function(data) { 
+        messageList.grid.addData(data);
+        // $('.flexigrid .hDiv th:last-child').css('width', '100%');
+        $('#messages tbody tr:first-child :last-child').css('width', '100%')
+        
+        // $.each(data.rows, function(index, row) {
+        //   var tr = $('#row' + row.id);
+        //   $(':first-child', tr).html(numberToHumanSize(row.cell[0]));
+        //   if (0 == index) {
+        //     // make the subject field 100%-wide
+        //     $(':last-child', tr).css('width', '100%');
+        //   }
+        // });
+        
+		  }
+    });
+  }
+  
+  // make message list look pretty
+  messageList = $.addFlex($("#messages"), { 
+    height: 150, 
+    singleSelect: true, 
+    striped: true,
+    dataType: 'json',
+    colModel: [
+    { display: 'Size', name: 'size', width: 70, sortable: true },
+    { display: 'From', name: 'from', width: 230, sortable: true },
+    { display: 'Subject', name: 'subject', width: 100, sortable: true },
+    ],
+    onSuccess: function() {
+      // handler for when the user selects/unselect a message in the list
+      $('#messages tbody tr').click(function() {
+        var fullMessageID = $(this).attr('id');
+        var messageID = fullMessageID.substr(6);
+
+        // find out if the row was selected or unselected
+        var selected = $(this).hasClass('trSelected');
+        
+        // reset attachment downloads being tracked
+        trackedInAttachmentIDs = [];
+
+        if (selected) {
+          selectedMessageID = fullMessageID;
+          
+          $('#message-container').load('/message/outgoing/embed/' + messageID, function() {
+            $("#attachments").flexigrid({
+              resizable: false,
+              title: 'Attachments'
+            });
+            
+            var contentElement = $('#message-content');
+            var contentParent = contentElement.parent();
+            var height = (contentParent.height() - 25) + 'px';
+            contentElement.css({ height: height });
+            
+          });
+        } else {
+          selectedMessageID = null;
+          $('#message').replaceWith('<div id="message" class="empty">&nbsp;</div>');
+        }
+        return false;
+      });
+      
+      if (null != selectedMessageID) {
+        var row = $("#" + selectedMessageID);
+        if (0 == row.length) {
+          // the message is gone
+          selectedMessageID = null;
+          $('#message').replaceWith('<div id="message" class="empty">&nbsp;</div>');
+        } else {
+          row.click();
+        }
+      }
+    }
+  });
+  
+  updateUnsentMessages([]);
+
+});
+</script> 

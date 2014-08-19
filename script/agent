@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]
+then
+	echo "Usage: $0 <agent-instance>"
+	exit 1
+fi
+
+pushd .
+echo "Running agent $1:"
+cd ./agent/instances/$1 && ./script/socketry/run
+popd

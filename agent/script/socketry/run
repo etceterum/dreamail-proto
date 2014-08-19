@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+require File.expand_path(File.join(__FILE__, '..', '..', '..', 'config', 'environment'))
+
+require 'socketry/dbhack'
+require 'socketry/logger'
+
+require 'socketry/registrar'
+
+require 'socketry/service/group'
+require 'socketry/service/ping'
+require 'socketry/service/track'
+require 'socketry/service/download'
+require 'socketry/service/download_scheduler'
+require 'socketry/service/simple_download'
+require 'socketry/service/message_announcement'
+require 'socketry/service/web_server'
+
+class Runner
+  include Socketry
+  
+  def initialize
+    Socketry.logger.level = Logger::INFO
+    
+    Service.all << Service.ping
+    Service.all << Service.track
+    # Service.all << Service.download
+    # Service.all << Service.download_scheduler
+    Service.all << Service.simple_download
+    Service.all << Service.message_announcement
+    Service.all << Service.web_server
+    
+    trap :INT do
+      puts 
+      puts "INT - stopping all services"
+      puts 
+      
+      Service.all.stop
+    end
+    
+  end
+  
+  def run
+    # register user/node if needed
+    Socketry.registrar.register
+    
+    # run all services
+    thread = Service.all
+    DB.release_connection
+    thread.join
+    puts "\nBye\n"
+  end
+  
+end
+
+runner = Runner.new
+runner.run

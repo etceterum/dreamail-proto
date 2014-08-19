@@ -1,0 +1,23 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  user_id: 1
+  uid: MyString
+  public_key: MyString
+  detected_host: MyString
+  reported_host: MyString
+  reported_port: 1
+  session_start_at: 2010-07-29 16:23:50
+  session_end_at: 2010-07-29 16:23:50
+  last_message_id: 1
+
+two:
+  user_id: 1
+  uid: MyString
+  public_key: MyString
+  detected_host: MyString
+  reported_host: MyString
+  reported_port: 1
+  session_start_at: 2010-07-29 16:23:50
+  session_end_at: 2010-07-29 16:23:50
+  last_message_id: 1

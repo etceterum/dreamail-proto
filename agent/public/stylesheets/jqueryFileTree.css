@@ -1,0 +1,91 @@
+UL.jqueryFileTree {
+	font-family: Verdana, sans-serif;
+	font-size: 11px;
+	line-height: 18px;
+	padding: 0px;
+	margin: 0px;
+}
+
+UL.jqueryFileTree LI, LI.jqft {
+	list-style: none;
+	padding: 0px;
+	padding-left: 20px;
+	margin: 0px;
+	white-space: nowrap;
+}
+
+UL.jqueryFileTree A, LI.jqft A {
+	color: #333;
+	text-decoration: none;
+	display: block;
+	padding: 0px 2px;
+}
+
+UL.jqueryFileTree A:hover, LI.jqft A:hover {
+	background: #BDF;
+}
+
+/* Core Styles */
+LI.jqft.directory { background: url(/images/jqueryFileTree/directory.png) left top no-repeat; }
+LI.jqft.expanded { background: url(/images/jqueryFileTree/folder_open.png) left top no-repeat; }
+LI.jqft.file { background: url(/images/jqueryFileTree/file.png) left top no-repeat; }
+LI.jqft.wait { background: url(/images/jqueryFileTree/spinner.gif) left top no-repeat; }
+/* File Extensions*/
+LI.jqft.ext_3gp { background: url(/images/jqueryFileTree/film.png) left top no-repeat; }
+LI.jqft.ext_afp { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_afpa { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_asp { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_aspx { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_avi { background: url(/images/jqueryFileTree/film.png) left top no-repeat; }
+LI.jqft.ext_bat { background: url(/images/jqueryFileTree/application.png) left top no-repeat; }
+LI.jqft.ext_bmp { background: url(/images/jqueryFileTree/picture.png) left top no-repeat; }
+LI.jqft.ext_c { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_cfm { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_cgi { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_com { background: url(/images/jqueryFileTree/application.png) left top no-repeat; }
+LI.jqft.ext_cpp { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_css { background: url(/images/jqueryFileTree/css.png) left top no-repeat; }
+LI.jqft.ext_doc { background: url(/images/jqueryFileTree/doc.png) left top no-repeat; }
+LI.jqft.ext_exe { background: url(/images/jqueryFileTree/application.png) left top no-repeat; }
+LI.jqft.ext_gif { background: url(/images/jqueryFileTree/picture.png) left top no-repeat; }
+LI.jqft.ext_fla { background: url(/images/jqueryFileTree/flash.png) left top no-repeat; }
+LI.jqft.ext_h { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_htm { background: url(/images/jqueryFileTree/html.png) left top no-repeat; }
+LI.jqft.ext_html { background: url(/images/jqueryFileTree/html.png) left top no-repeat; }
+LI.jqft.ext_jar { background: url(/images/jqueryFileTree/java.png) left top no-repeat; }
+LI.jqft.ext_jpg { background: url(/images/jqueryFileTree/picture.png) left top no-repeat; }
+LI.jqft.ext_jpeg { background: url(/images/jqueryFileTree/picture.png) left top no-repeat; }
+LI.jqft.ext_js { background: url(/images/jqueryFileTree/script.png) left top no-repeat; }
+LI.jqft.ext_lasso { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_log { background: url(/images/jqueryFileTree/txt.png) left top no-repeat; }
+LI.jqft.ext_m4p { background: url(/images/jqueryFileTree/music.png) left top no-repeat; }
+LI.jqft.ext_mov { background: url(/images/jqueryFileTree/film.png) left top no-repeat; }
+LI.jqft.ext_mp3 { background: url(/images/jqueryFileTree/music.png) left top no-repeat; }
+LI.jqft.ext_mp4 { background: url(/images/jqueryFileTree/film.png) left top no-repeat; }
+LI.jqft.ext_mpg { background: url(/images/jqueryFileTree/film.png) left top no-repeat; }
+LI.jqft.ext_mpeg { background: url(/images/jqueryFileTree/film.png) left top no-repeat; }
+LI.jqft.ext_ogg { background: url(/images/jqueryFileTree/music.png) left top no-repeat; }
+LI.jqft.ext_pcx { background: url(/images/jqueryFileTree/picture.png) left top no-repeat; }
+LI.jqft.ext_pdf { background: url(/images/jqueryFileTree/pdf.png) left top no-repeat; }
+LI.jqft.ext_php { background: url(/images/jqueryFileTree/php.png) left top no-repeat; }
+LI.jqft.ext_png { background: url(/images/jqueryFileTree/picture.png) left top no-repeat; }
+LI.jqft.ext_ppt { background: url(/images/jqueryFileTree/ppt.png) left top no-repeat; }
+LI.jqft.ext_psd { background: url(/images/jqueryFileTree/psd.png) left top no-repeat; }
+LI.jqft.ext_pl { background: url(/images/jqueryFileTree/script.png) left top no-repeat; }
+LI.jqft.ext_py { background: url(/images/jqueryFileTree/script.png) left top no-repeat; }
+LI.jqft.ext_rb { background: url(/images/jqueryFileTree/ruby.png) left top no-repeat; }
+LI.jqft.ext_rbx { background: url(/images/jqueryFileTree/ruby.png) left top no-repeat; }
+LI.jqft.ext_rhtml { background: url(/images/jqueryFileTree/ruby.png) left top no-repeat; }
+LI.jqft.ext_rpm { background: url(/images/jqueryFileTree/linux.png) left top no-repeat; }
+LI.jqft.ext_ruby { background: url(/images/jqueryFileTree/ruby.png) left top no-repeat; }
+LI.jqft.ext_sql { background: url(/images/jqueryFileTree/db.png) left top no-repeat; }
+LI.jqft.ext_swf { background: url(/images/jqueryFileTree/flash.png) left top no-repeat; }
+LI.jqft.ext_tif { background: url(/images/jqueryFileTree/picture.png) left top no-repeat; }
+LI.jqft.ext_tiff { background: url(/images/jqueryFileTree/picture.png) left top no-repeat; }
+LI.jqft.ext_txt { background: url(/images/jqueryFileTree/txt.png) left top no-repeat; }
+LI.jqft.ext_vb { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_wav { background: url(/images/jqueryFileTree/music.png) left top no-repeat; }
+LI.jqft.ext_wmv { background: url(/images/jqueryFileTree/film.png) left top no-repeat; }
+LI.jqft.ext_xls { background: url(/images/jqueryFileTree/xls.png) left top no-repeat; }
+LI.jqft.ext_xml { background: url(/images/jqueryFileTree/code.png) left top no-repeat; }
+LI.jqft.ext_zip { background: url(/images/jqueryFileTree/zip.png) left top no-repeat; }

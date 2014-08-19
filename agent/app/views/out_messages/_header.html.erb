@@ -1,0 +1,15 @@
+<tr class='' message=<%= message.id %>>
+  <%- size = message.attachments.inject(0) { |size, a| size + a.size } -%>
+  <td class='size'><%= 0 == size ? 0 : number_to_human_size(size) %></td>
+  <td class='to' title='<%= message.recipients.collect { |r| h r.contact.login }.join('; ') %>'>
+    <% if !message.recipients.empty? %>
+      <ul>
+      <%- for recipient in message.recipients -%><li><%=h recipient.contact.login %></li><%- end -%>
+      </ul>
+    <% else %>
+      <span class='empty-list'>No-one</span>
+    <% end %>
+    
+  </td>
+  <td class='subject' style='width: 100%'><%=h message.subject %></td>
+</tr>

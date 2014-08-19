@@ -1,0 +1,24 @@
+<% title "In Attachment" %>
+
+<p>
+  <strong>In Message:</strong>
+  <%=h @in_attachment.in_message_id %>
+</p>
+<p>
+  <strong>Asset:</strong>
+  <%=h @in_attachment.asset_id %>
+</p>
+<p>
+  <strong>Local Path Prefix:</strong>
+  <%=h @in_attachment.local_path_prefix %>
+</p>
+<p>
+  <strong>Relative Path:</strong>
+  <%=h @in_attachment.relative_path %>
+</p>
+
+<p>
+  <%= link_to "Edit", edit_in_attachment_path(@in_attachment) %> |
+  <%= link_to "Destroy", @in_attachment, :confirm => 'Are you sure?', :method => :delete %> |
+  <%= link_to "View All", in_attachments_path %>
+</p>

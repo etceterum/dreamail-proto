@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+require File.expand_path(File.join(__FILE__, '..', '..', '..', 'config', 'environment'))
+
+private_key = OpenSSL::PKey::RSA.new(2048)
+public_key = private_key.public_key
+
+puts "P: #{private_key.p}"
+puts "Q: #{private_key.q}"
+puts "N:  #{private_key.n} (length: #{private_key.n.to_s(2).length} bytes)"
+puts "E: #{private_key.e}"
+puts "D: #{private_key.d}"
+
+puts "---"
+puts public_key.public_encrypt("").length
+puts public_key.public_encrypt("Hello world").length
+puts public_key.public_encrypt("*"*128).length
+puts public_key.public_encrypt("*"*(256 - 11)).length
+

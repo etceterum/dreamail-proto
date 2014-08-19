@@ -1,0 +1,47 @@
+<% title 'Downloads' %>
+
+<%= render :partial => 'downloads', :locals => { :attachments => [] } %>
+
+<script language='javascript'>
+function updateAttachmentProgress(badge) {
+  var percentage = parseInt(badge.attr('value'));
+  // console.log('Percentage: ' + percentage)
+
+  // badge.progressbar('option', 'value', percentage);
+  // $('.text', badge).html(percentage + '%');
+
+  badge.progressBar(percentage)
+}
+
+$(document).ready(function() {
+  updateDownloads = function(newDownloadCount) {
+    downloadCount = newDownloadCount;
+    resetTrackedInAttachmentIDs();
+    $('#downloads').load('/downloads/list', function() {
+      $('#downloads table tr.attachment').each(function(index) {
+        var id = $(this).attr('id').substr(11);
+        addTrackedInAttachmentID(id);
+        var badge = $('td.progress div.percentage', $(this));
+        // badge.progressbar({ value: 0 });
+        updateAttachmentProgress(badge);
+        $('td.ctrl a', $(this)).each(function(index) {
+          $(this).click(function() {
+            alert('This function is not implemented yet');
+            return false;
+          });
+        });
+      });
+    });
+  }
+  
+  updateTrackedInAttachment = function(attachment) {
+    var row = $('#attachment-' + attachment.id);
+    var badge = $('td.progress div.percentage', row);
+    var value = progressToPercentage(attachment.progress, attachment.total);
+    badge.attr('value', value);
+    updateAttachmentProgress(badge);
+  }
+  
+  updateDownloads(0);
+});
+</script>

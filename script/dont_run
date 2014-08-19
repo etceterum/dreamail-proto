@@ -1,0 +1,53 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH << './lib'
+require 'socketry/script'
+
+class Dispatcher
+  include Socketry::Script
+  
+  MASTER_PORT = 2500
+  AGENT_INSTANCES_DIR = './agent/instances'
+  
+  def self.dispatch(command, args)
+    signature = "command_#{command}"
+    d = Dispatcher.new
+    if d.respond_to?(signature)
+      d.send(signature, args)
+    else
+      d.usage
+    end
+  end
+  
+  def command_agent(args)
+    instance = args.shift
+    agent_error("No agent instance specified") unless instance
+    instance_dir = File.join(AGENT_INSTANCES_DIR, instance)
+    agent_error("Agent instance directory #{instance_dir} does not exist") unless File.directory?(instance_dir)
+    agent_instance_script "Starting agent #{instance}", 'run', instance
+  end
+  
+  def agent_error(message)
+    error(:agent, '<instance>', message)
+  end
+  
+  def command_master(args)
+    script "Starting master on port #{MASTER_PORT}:", "server -p #{MASTER_PORT}", './master'
+  end
+  
+  def error(command, params, message)
+    $stderr.puts "#{command.to_s.camelize} Error: #{message}" if message
+    $stderr.puts "Usage: #{$0} #{command} #{params}"
+    exit 1
+  end
+  
+  def usage
+    commands = public_methods(false).find_all { |m| m =~ /^command_/ }.collect { |m| m.to_s.sub(/^command_/, '')}
+    $stderr.puts "Usage: #{$0} <#{commands.join('|')}> [...command-specific-parameters...]"
+    exit 1
+  end
+  
+end
+
+command = ARGV.shift
+Dispatcher.dispatch(command, ARGV)

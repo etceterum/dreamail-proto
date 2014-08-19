@@ -1,0 +1,97 @@
+#!/usr/bin/env ruby
+require File.expand_path(File.join(__FILE__, '..', '..', '..', 'config', 'environment'))
+
+require 'fileutils'
+require 'socketry/attachment_download_initiator'
+
+def error(message)
+  $stderr.puts "Error: #{message}"
+  exit 1
+end
+
+class Dispatcher
+  
+  def self.dispatch(command, args)
+    signature = "command_#{command}"
+    d = Dispatcher.new
+    if d.respond_to?(signature)
+      d.send(signature, args)
+    else
+      d.usage
+    end
+  end
+  
+  def command_list(args)
+    puts("-" * 80)
+    puts(sprintf("%5s | %20s | %4s | %25s | %s", 'id', 'from', '#att', 'received', 'subject'))
+    puts("-" * 80)
+    for message in InMessage.received.scoped({ :order => 'in_messages.received_at desc' })
+      puts(sprintf("%5d | %20s | %4d | %25s | %s", message.id, message.sender.login, message.attachments.count, message.received_at, message.subject))
+    end
+    puts("-" * 80)
+  end
+  
+  def command_show(args)
+    id = args.shift
+    show_error("No incoming message ID") unless id
+
+    message = InMessage.find_by_id(id) or show_error("Incoming message with ID \"#{id}\" doesn't exist")
+    push_error("Message #{id} is not received yet") unless message.received?
+
+    puts "Subject: \"#{message.subject}\""
+    puts "Content:\n--->\n#{message.content}\n<---\n"
+    
+    puts "Attachments:\n"
+    puts("-" * 80)
+    puts(sprintf("%5s | %20s | %15s | %s", 'id', 'size', 'status', 'name'))
+    puts("-" * 80)
+    for att in message.attachments
+      status = 'not wanted'
+      if att.downloading?
+        status = 'downloading'
+      elsif att.here?
+        status = 'available'
+      end
+      puts(sprintf("%5d | %20d | %15s | %s", att.id, att.size, status, att.relative_path))
+    end
+    puts("-" * 80)
+  end
+  
+  def show_error(message)
+    error(:show, '<incoming-message-id>', message)
+  end
+  
+  def command_want(args)
+    id = args.shift
+    show_error("No incoming attachment ID") unless id
+
+    attachment = InAttachment.find_by_id(id) or show_error("Incoming attachment with ID \"#{id}\" doesn't exist")
+    want_error("Attachment #{id} is already being downloaded") if attachment.downloading?
+    want_error("Attachment #{id} is already downloaded") if attachment.here?
+
+    Socketry.attachment_download_initiator.initiate_attachment_download(attachment)
+    puts "Marked attachment #{attachment.id} for downloading"
+    
+    # want_error("Something is wrong: could not find information about the attachment in message data")
+  end
+  
+  def want_error(message)
+    error(:want, '<incoming-attachment-id>', message)
+  end
+  
+  def error(command, params, message)
+    $stderr.puts "#{command.to_s.camelize} Error: #{message}"
+    $stderr.puts "Usage: #{$0} #{command} #{params}"
+    exit 1
+  end
+  
+  def usage
+    commands = public_methods(false).find_all { |m| m =~ /^command_/ }.collect { |m| m.to_s.sub(/^command_/, '')}
+    $stderr.puts "Usage: #{$0} <#{commands.join('|')}> [...command-specific-parameters...]"
+    exit 1
+  end
+  
+end
+
+command = ARGV.shift
+Dispatcher.dispatch(command, ARGV)

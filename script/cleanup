@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+
+##########
+
+$LOAD_PATH << './lib'
+require 'socketry/script'
+
+##########
+
+class Cleanup
+  include Socketry::Script
+
+  def run
+    socketry_script "Destroying all users at master", "user destroy all", :master
+    execute "Deleting master logs", "rm log/*.log", :master
+
+    puts "Destroying all agent instances"
+    Dir['agent/instances/*'].each do |agent_instance_path|
+      agent_instance = File.basename(agent_instance_path)
+      script "  #{agent_instance}", "destroy instance #{agent_instance}", :agent
+    end
+  end
+
+end
+
+##########
+
+Cleanup.new.run

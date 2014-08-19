@@ -1,0 +1,8 @@
+---
+:uid:
+:host: localhost
+:port: <%= port %>
+:security:
+  :passphrase: passphrase.txt
+  :private_key: private_key.pem
+  :public_key: public_key.pem

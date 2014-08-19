@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+require File.expand_path('../../../config/environment',  __FILE__)
+
+puts "Destroying all asset/piece data in the database"
+Asset.destroy_all
+puts "Destroying all announcement/notice/message data in the database"
+Announcement.destroy_all

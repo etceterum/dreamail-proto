@@ -1,0 +1,77 @@
+<% title 'Inbox' %>
+<% content_toolbar :edit_message %>
+
+<div class='wrapper'>
+
+  <!-- top -->
+  <div class='full-width table-row'>
+    <div class='full-width table-cell'>
+      
+      <table id='messages'>
+        <tbody>
+          <% for message in @out_messages %>
+            <%= render :partial => 'header', :locals => { :message => message } %>
+          <% end %>
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+
+  <!-- bottom -->
+  <div class='full-width table-row'>
+    <div id='message-container' class='full-width table-cell' style='height: 100%'>
+      <div id='message' class='empty'>&nbsp;</div>
+    </div>
+  </div>
+</div>
+
+<script language='javascript'>
+
+$(document).ready(function() {
+  
+  // make message list look pretty
+  $('#messages').flexigrid({ 
+    height: 150, 
+    singleSelect: true, 
+    striped: true,
+    colModel: [
+    { display: 'Size', name: 'size', width: 60, sortable: true },
+    { display: 'To', name: 'to', width: 200, sortable: true },
+    { display: 'Subject', name: 'subject', width: 100, sortable: true },
+    ]
+  });
+  
+  $('#messages tbody tr').click(function() {
+    var messageID = $(this).attr('message');
+    // find out if the row was selected or unselected
+    var selected = $(this).hasClass('trSelected');
+    var editButton = $('#button-message-edit');
+    
+    if (selected) {
+      $('#message-container').load('/draft/embed/' + messageID, function() {
+        editButton.removeClass('disabled').unbind('click').click(function() {
+          window.location.href = '/draft/edit/' + messageID;
+          return false;
+        });
+        $('#attachments').flexigrid({
+          resizable: false,
+          title: 'Attachments'
+        });
+        var contentElement = $('#message-content');
+        var contentParent = contentElement.parent();
+        var height = (contentParent.height() - 25) + 'px';
+        contentElement.css({ height: height });
+        // $('.flexigrid', $('#attachments')).css({ height: $('#attachments-wrapper').height() + 'px' });
+      });
+    } else {
+      $('#message').replaceWith('<div id="message" class="empty">&nbsp;</div>');
+      editButton.addClass('disabled').unbind('click').click(function() {
+        return false;
+      });
+    }
+    
+  });
+
+});
+</script> 

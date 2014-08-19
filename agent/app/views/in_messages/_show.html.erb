@@ -1,0 +1,81 @@
+<div id='message'>
+  <% if message %>
+    
+    <div class='header'>
+      <table>
+        <tr>
+          <th>Subject:</th>
+          <td><strong><%=h message.subject %></strong></td>
+        </tr>
+        <tr>
+          <th>From:</th>
+          <td><%=h message.sender.login %></td>
+        </tr>
+        <tr>
+          <th>When:</th> 
+          <td><%=format_time message.confirmed_at %></td>
+        </tr>
+      </table>
+    </div>
+  
+    <div class='body'>
+    
+      <div class='content'>
+        <iframe id='message-content' src='/message/incoming/embed/content/<%= message.id %>'/>
+      </div>
+    
+      <div class='attachments'>
+        <% if message.attachments.empty? %>
+          <span>No attachments</span>
+        <% else %>
+          <table id='attachments'>
+            <thead>
+              <tr>
+                <th width='50'>Size</th>
+                <th width='150'>Action</th>
+                <th width='100'>Name</th>
+                <th width='100'>Path</th>
+              </tr>
+            </thead>
+            <!-- <tfoot>
+              <tr>
+                <th width='50'><%= number_to_human_size(message.attachments.inject(0) { |sum, a| sum + a.size }) %></th>
+                <th></th>
+                <th></th>
+                <th></th>
+              </tr>
+            </tfoot> -->
+            <tbody>
+              <% for attachment in message.attachments %>
+                <tr>
+                  <td>
+                    <%= number_to_human_size(attachment.size) %>
+                  </td>
+                  <td>
+                    <% if attachment.here? %>
+                    <%= render :partial => 'in_attachments/ready', :locals => { :attachment => attachment } %>
+                    <% elsif attachment.downloading? %>
+                    <%= render :partial => 'in_attachments/downloading', :locals => { :attachment => attachment } %>
+                    <% else %>
+                    <a href='#' class='download-attachment', id='download-attachment-<%= attachment.id %>'>Download</a>
+                    <% end %>
+                  </td>
+                  <td>
+                    <%= h(File.basename(attachment.relative_path)) %>
+                  </td>
+                  <td>
+                    <%= h(File.dirname(attachment.relative_path)) %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% end %>
+      
+      </div>
+    
+    </div>
+    
+  <% end %>
+</div>
+

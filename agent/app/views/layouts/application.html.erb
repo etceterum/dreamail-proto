@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <%- suffix = "#{h Socketry::Config.user.login} | Dreamail" -%>
+    <title><%= h((yield(:title) && "#{yield(:title)} | #{suffix}") || suffix) %></title>
+    <%= stylesheet_link_tag 'jquery-ui-1.8.4', 'jquery.cleditor', 'jqueryFileTree', 'application', 'socketry', 'flexigrid', 'progressbar', :cache => 'base' %>
+    <%= javascript_include_tag 'jquery-1.4.2', 'jquery-ui-1.8.4', 'jquery.cleditor', 'jqueryFileTree', 'splitter', 'flexigrid', 'jquery.progressbar', 'socketry', :cache => 'base' %>
+    <%= yield(:head) %>
+  </head>
+  
+  <body>
+    
+    <div class='wrapper' id='body'>
+      <div id='top'>
+        <div id='header'>
+          <div id='dreamail'>
+            Dreamail
+          </div>
+          <div id='toolbar'>
+            <span class='nav-toolpanel'>
+              <%- nav_toolbar :new_message unless yield(:nav_buttons) -%>
+              <%= yield(:nav_buttons) %>
+              <!-- <%= link_to(image_tag('/images/icons/mail_new.png'), new_draft_path, :title => 'New Message') %> -->
+            </span>
+            <span class='content-toolpanel'>
+              <%= yield(:content_buttons) %>
+              <!-- <%= link_to(image_tag('/images/icons/mail_send.png'), {}, :title => 'Send') %>
+              <%= link_to(image_tag('/images/icons/file_save.png'), {}, :title => 'Save As Draft') %> -->
+            </span>
+            <span class='other-toolpanel'>
+              <%- other_toolbar :preferences unless yield(:other_buttons) -%>
+              <%= yield(:other_buttons) %>
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div id='middle'>
+        <div class='wrapper'>
+          <div id='left'>
+            <div id='nav'>
+              
+              <ul>
+                <li><%= nav_link_to 'Drafts', :url => { :controller => :out_messages, :action => :drafts }, :badge => 'draft-count' %></li>
+                <li>
+                  <%= nav_link_to 'Inbox', :url => { :controller => :in_messages, :action => :index }, :badge => 'unread-count' %>
+                </li>
+                <li><%= nav_link_to 'Sent', :url => { :controller => :out_messages, :action => :sent } %></li>
+                <li><%= nav_link_to 'Outbox', :url => { :controller => :out_messages, :action => :unsent }, :badge => 'unsent-count' %></li>
+                <li><%= nav_link_to 'Trash', :url => { :controller => :human, :action => :trash } %></li>
+              </ul>
+
+              <ul>
+                <li><%= nav_link_to 'Contacts', :url => { :controller => :contacts, :action => :index } %></li>
+                <li><%= nav_link_to 'Downloads', :url => { :controller => :in_attachments, :action => :downloads }, :badge => 'download-count' %></li>
+              </ul>
+              
+            </div>
+          </div>
+          
+          <div id='right'>
+            <div id='content'>
+              <%= content_tag(:h1, yield(:title)) unless yield(:no_global_title) %>
+              <%= yield %>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div id='bottom'>
+        <div id='footer'></div>
+      </div>
+      
+    </div>
+
+  </body>
+</html>

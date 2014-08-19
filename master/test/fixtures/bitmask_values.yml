@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  bit_number: 1
+  byte_number: 1
+  bit_value: 1
+
+two:
+  bit_number: 1
+  byte_number: 1
+  bit_value: 1

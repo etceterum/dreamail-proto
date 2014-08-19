@@ -1,0 +1,27 @@
+<div id='downloads'>
+  <% if !attachments.empty? %>
+    <table>
+      <tr>
+        <th>&nbsp;</th>
+        <th>Progress</th>
+        <th>Size</th>
+        <th>Path</th>
+      </tr>
+    <% for attachment in attachments %>
+      <tr class='attachment' id='attachment-<%= attachment.id %>'>
+        <td class='ctrl'>
+          <a href='javascript:false' title='Pause Download'><img src='/images/icons/pause.png'/></a>
+          <a href='javascript:false' title='Cancel Download'><img src='/images/icons/terminate.png'/></a>
+        </td>
+        <td class='progress'>
+          <div class='percentage' value='<%= attachment.download_percentage %>'></div>
+        </td>
+        <td class='size'><%= number_to_human_size(attachment.size) %></td>
+        <td class='path'><%=h attachment.relative_path %></td>
+      </tr>
+    <% end %>
+    </table>
+  <% else %>
+    <div class='empty'>There are currently no downloads in progress</div>
+  <% end %>
+</div>

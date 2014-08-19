@@ -1,0 +1,40 @@
+<% title "Out Message" %>
+
+<p>
+  <strong>Uid:</strong>
+  <%=h @out_message.uid %>
+</p>
+<p>
+  <strong>Subject:</strong>
+  <%=h @out_message.subject %>
+</p>
+<p>
+  <strong>Content:</strong>
+  <%=h @out_message.content %>
+</p>
+<p>
+  <strong>Status Code:</strong>
+  <%=h @out_message.status_code %>
+</p>
+<p>
+  <strong>Hex Cipher Key:</strong>
+  <%=h @out_message.hex_cipher_key %>
+</p>
+<p>
+  <strong>Hex Cipher Iv:</strong>
+  <%=h @out_message.hex_cipher_iv %>
+</p>
+<p>
+  <strong>Body Asset:</strong>
+  <%=h @out_message.body_asset_id %>
+</p>
+<p>
+  <strong>Head Asset:</strong>
+  <%=h @out_message.head_asset_id %>
+</p>
+
+<p>
+  <%= link_to "Edit", edit_out_message_path(@out_message) %> |
+  <%= link_to "Destroy", @out_message, :confirm => 'Are you sure?', :method => :delete %> |
+  <%= link_to "View All", out_messages_path %>
+</p>

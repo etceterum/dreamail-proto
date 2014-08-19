@@ -1,0 +1,58 @@
+<div id='message'>
+  <% if message %>
+    
+    <div class='header'>
+      <table>
+        <tr>
+          <th>Subject:</th>
+          <td><strong><%=h message.subject %></strong></td>
+        </tr>
+        <tr>
+          <th>To:</th>
+          <td><%= message.recipients.collect { |r| h r.contact.login }.join('; ') %></td>
+        </tr>
+      </table>
+    </div>
+  
+    <div class='body'>
+    
+      <div class='content'>
+        <iframe id='message-content' src='/message/outgoing/embed/content/<%= message.id %>'/>
+      </div>
+    
+      <div class='attachments' style='text-align: center'>
+        <% if message.attachments.empty? %>
+          <span class='empty-list'>No attachments</span>
+        <% else %>
+          <table id='attachments'>
+            <thead>
+              <tr>
+                <th width='50'>Size</th>
+                <th width='100'>Name</th>
+                <th width='100'>Path</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% for attachment in message.attachments %>
+                <tr>
+                  <td>
+                    <%= number_to_human_size(attachment.size) %>
+                  </td>
+                  <td>
+                    <%= h(File.basename(attachment.relative_path)) %>
+                  </td>
+                  <td>
+                    <%= h(File.dirname(attachment.relative_path)) %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% end %>
+      
+      </div>
+    
+    </div>
+    
+  <% end %>
+</div>

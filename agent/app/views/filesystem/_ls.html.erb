@@ -1,0 +1,9 @@
+<ul class='jqueryFileTree' style='display: none;'>
+  <%- for directory in @directories -%>
+  <li class='jqft directory collapsed'><a href='#' rel='<%= directory %>/'><%= File.basename(directory) %></a></li>
+  <%- end -%>
+  <%- for file in @files -%>
+	<%- ext = File.extname(file)[1..-1] -%>
+	<li class='jqft file ext_#{ext}'><a href='#' rel='<%= file %>'><%= File.basename(file) %></a></li>
+  <%- end -%>
+</ul>

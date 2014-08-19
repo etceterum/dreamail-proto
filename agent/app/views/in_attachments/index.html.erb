@@ -1,0 +1,23 @@
+<% title "In Attachments" %>
+
+<table>
+  <tr>
+    <th>In Message</th>
+    <th>Asset</th>
+    <th>Local Path Prefix</th>
+    <th>Relative Path</th>
+  </tr>
+  <% for in_attachment in @in_attachments %>
+    <tr>
+      <td><%=h in_attachment.in_message_id %></td>
+      <td><%=h in_attachment.asset_id %></td>
+      <td><%=h in_attachment.local_path_prefix %></td>
+      <td><%=h in_attachment.relative_path %></td>
+      <td><%= link_to "Show", in_attachment %></td>
+      <td><%= link_to "Edit", edit_in_attachment_path(in_attachment) %></td>
+      <td><%= link_to "Destroy", in_attachment, :confirm => 'Are you sure?', :method => :delete %></td>
+    </tr>
+  <% end %>
+</table>
+
+<p><%= link_to "New In Attachment", new_in_attachment_path %></p>

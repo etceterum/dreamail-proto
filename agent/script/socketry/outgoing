@@ -1,0 +1,154 @@
+#!/usr/bin/env ruby
+require File.expand_path(File.join(__FILE__, '..', '..', '..', 'config', 'environment'))
+
+require 'socketry/message_announcer'
+
+def error(message)
+  $stderr.puts "Error: #{message}"
+  exit 1
+end
+
+class Dispatcher
+  
+  def self.dispatch(command, args)
+    signature = "command_#{command}"
+    d = Dispatcher.new
+    if d.respond_to?(signature)
+      d.send(signature, args)
+    else
+      d.usage
+    end
+  end
+  
+  def command_import(args)
+    path = args.shift
+    import_error("No path to message data") unless path
+    import_error("Message data path \"#{path}\" doesn't exist") unless File.directory?(path)
+    subject = File.read(File.join(path, 'subject.txt'))
+    content = File.read(File.join(path, 'content.txt'))
+    
+    logins = args
+    import_error("No recipient logins") if logins.empty?
+
+    # message
+    message = OutMessage.new(:subject => subject, :content => content)
+    message.status = :draft
+    
+    # recipients
+    contacts = Contact.active
+    for login in logins
+      contact = contacts.find_by_login(login)
+      import_error("Invalid recipient login #{login}") unless contact
+      message.recipients.build(:contact => contact)
+    end 
+    
+    # attachments
+    att_root = File.join(path, 'attachments')
+    import_error("Attachment path \"#{att_root}\" doesn't exist") unless File.directory?(att_root)
+    
+    Dir.glob(File.join(att_root, '**', '*')) do |att_path|
+      next if File.directory?(att_path)
+      rel_att_path = att_path.sub(/^#{att_root}#{File::SEPARATOR}/, '')
+      message.attachments.build(:relative_path => rel_att_path, :local_path_prefix => att_root)
+    end
+    
+    message.save!
+
+    puts message.id
+  end
+  
+  def import_error(message)
+    error(:import, '<path-to-message-data> <recipient-login> [...<recipient_login>]', message)
+  end
+  
+  def command_list(args)
+    puts("-" * 80)
+    puts(sprintf("%5s | %8s | %s", 'id', 'status', 'subject'))
+    puts("-" * 80)
+    for message in OutMessage.all
+      puts(sprintf("%5d | %8s | %s", message.id, message.status, message.subject))
+    end
+    puts("-" * 80)
+  end
+  
+  def command_push(args)
+    id = args.shift
+    push_error("No message ID") unless id
+    if 'all' == id
+      messages = OutMessage.drafts.ordered
+      for message in messages
+        unless message.has_recipients?
+          puts "#{message.id} - has no recipients: skipping"
+        end
+        message.status = :unsent
+        message.save!
+        puts "#{message.id} - OK"
+      end
+    else
+      message = OutMessage.find_by_id(id) or push_error("Message with ID \"#{id}\" doesn't exist")
+      push_error("Message #{id} is not a draft (#{message.status})") unless message.draft?
+      push_error("Message has no recipients") unless message.has_recipients?
+      message.status = :unsent
+      message.save!
+      puts "#{message.id} - OK"
+    end
+  end
+  
+  def push_error(message)
+    error(:push, '<message-id>|all', message)
+  end
+  
+  def command_announce(args)
+    id = args.shift
+    announce_error("No message ID") unless id
+    if 'all' == id
+      messages = OutMessage.unsent.ordered
+      for message in messages
+        unless message.has_recipients?
+          puts "#{message.id} - has no recipients: skipping"
+          next
+        end
+
+        begin
+          $stdout.puts "Announcing message #{message.id} to #{message.contacts.collect(&:login).join(', ')}"
+          Socketry::MessageAnnouncer.new(message, $stdout).announce
+        rescue Socketry::MessageAnnouncerError => e
+          announce_error(e)
+        end
+        
+        puts "#{message.id} - OK"
+      end
+    else
+      message = OutMessage.find_by_id(id) or announce_error("Message with ID \"#{id}\" doesn't exist")
+      announce_error("Message #{id} is not an unsent message (#{message.status})") unless message.unsent?
+      announce_error("Message has no recipients") unless message.has_recipients?
+      begin
+        $stdout.puts "Announcing message #{message.id} to #{message.contacts.collect(&:login).join(', ')}"
+        Socketry::MessageAnnouncer.new(message, $stdout).announce
+      rescue Socketry::MessageAnnouncerError => e
+        announce_error(e)
+      end
+      puts "#{message.id} - OK"
+    end
+  end
+  
+  def announce_error(message)
+    error(:announce, '<message-id>|all', message)
+  end
+  
+  def error(command, params, message)
+    $stderr.puts "#{command.to_s.camelize} Error: #{message}"
+    $stderr.puts "Usage: #{$0} #{command} #{params}"
+    exit 1
+  end
+  
+  def usage
+    commands = public_methods(false).find_all { |m| m =~ /^command_/ }.collect { |m| m.to_s.sub(/^command_/, '')}
+    $stderr.puts "Usage: #{$0} <#{commands.join('|')}> [...command-specific-parameters...]"
+    exit 1
+  end
+  
+end
+
+command = ARGV.shift
+Dispatcher.dispatch(command, ARGV)

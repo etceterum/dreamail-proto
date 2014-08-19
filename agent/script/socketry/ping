@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+require File.expand_path(File.join(__FILE__, '..', '..', '..', 'config', 'environment'))
+
+require 'socketry/pinger'
+
+Socketry::Pinger.logger = Logger.new(STDOUT)
+pinger = Socketry::Pinger.new
+pinger.ping
